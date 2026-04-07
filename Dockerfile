@@ -17,7 +17,7 @@
 #     --build-arg EXTRA_APT_PACKAGES="python3 wget" \
 #     -t openclawxx:local .
 
-FROM ghcr.io/openclaw/openclaw:v2026.4.5
+FROM ghcr.io/openclaw/openclaw:latest
 
 ARG EXTRA_APT_PACKAGES=""
 
