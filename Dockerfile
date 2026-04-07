@@ -2,33 +2,21 @@
 #
 # Dockerfile — extends the official pre-built OpenClaw image
 #
-# Uses ghcr.io/openclaw/openclaw as base (pre-built, avoids build:docker
-# regressions in openclaw/openclaw#61211 and openclaw/openclaw#61066).
-# All runtime files are owned by the 'node' user as set by the base image.
+# Uses ghcr.io/openclaw/openclaw as base (pre-built, no pnpm build:docker
+# required). Sidesteps build:docker regressions in openclaw/openclaw#61211
+# and openclaw/openclaw#61066.
 #
 # Build:
 #   docker build -f Dockerfile -t openclawxx:local .
 #
-# Add more packages:
-#   docker build -f Dockerfile \
-#     --build-arg EXTRA_APT_PACKAGES="python3 wget" \
-#     -t openclawxx:local .
+# The official base image already installs apt packages via
+# OPENCLAW_DOCKER_APT_PACKAGES build-arg — we just pass our packages through.
+# No extra RUN layer needed.
 
 FROM ghcr.io/openclaw/openclaw:latest
 
-# The base image already has 'node' user configured and WORKDIR /app set.
-# apt-get runs as root during build (USER directive only affects runtime).
-# Installed binaries get 755 permissions — node user can read and execute.
+ARG OPENCLAW_DOCKER_APT_PACKAGES="tmux ffmpeg jq"
 
-ARG EXTRA_APT_PACKAGES=""
-
-RUN --mount=type=cache,id=openclaw-apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=openclaw-apt-lists,target=/var/lib/apt/lists,sharing=locked \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        tmux \
-        ffmpeg \
-        jq \
-        ${EXTRA_APT_PACKAGES} && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# The base image has a conditional RUN that only executes if this arg is non-empty:
+#   RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then apt-get update ...; fi
+# So tmux/ffmpeg/jq get installed by the inherited RUN, no duplication needed.
