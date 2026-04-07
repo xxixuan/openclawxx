@@ -9,14 +9,25 @@
 # Build:
 #   docker build -f Dockerfile -t openclawxx:local .
 #
-# The official base image already installs apt packages via
-# OPENCLAW_DOCKER_APT_PACKAGES build-arg — we just pass our packages through.
-# No extra RUN layer needed.
+# Add more packages:
+#   docker build -f Dockerfile \
+#     --build-arg EXTRA_APT_PACKAGES="python3 wget" \
+#     -t openclawxx:local .
 
 FROM ghcr.io/openclaw/openclaw:latest
 
-ARG OPENCLAW_DOCKER_APT_PACKAGES="tmux ffmpeg jq"
+ARG EXTRA_APT_PACKAGES=""
 
-# The base image has a conditional RUN that only executes if this arg is non-empty:
-#   RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then apt-get update ...; fi
-# So tmux/ffmpeg/jq get installed by the inherited RUN, no duplication needed.
+USER root
+RUN --mount=type=cache,id=openclaw-apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=openclaw-apt-lists,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        tmux \
+        ffmpeg \
+        jq \
+        ${EXTRA_APT_PACKAGES} && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+USER node
