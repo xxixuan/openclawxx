@@ -1,0 +1,71 @@
+name: Sync upstream tag
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SYNC_TOKEN }}
+          persist-credentials: true
+
+      - name: Get latest upstream tag
+        id: upstream
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | jq -r .tag_name)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Upstream latest tag: $TAG"
+
+      - name: Update README
+        env:
+          TAG: ${{ steps.upstream.outputs.tag }}
+        run: |
+          DATE=$(date -u "+%Y-%m-%d")
+          echo "LATEST_TAG_PLACEHOLDER" > /tmp/readme.txt
+          echo "DATE_PLACEHOLDER" >> /tmp/readme.txt
+          cat > README.md << 'RAWEOF'
+# openclawxx
+
+OpenClaw custom image — extends official base with extra APT packages.
+
+## Base Image
+- **Upstream**: [openclaw/openclaw](https://github.com/openclaw/openclaw)
+- **Latest Tag**: LATEST_TAG_PLACEHOLDER
+- **Last Synced**: DATE_PLACEHOLDER
+
+## Included Packages
+```
+tmux ffmpeg jq
+```
+
+## Dockerfile
+
+```
+FROM ghcr.io/openclaw/openclaw:latest
+ARG EXTRA_APT_PACKAGES=""
+RUN apt-get update && apt-get install -y tmux ffmpeg jq ${EXTRA_APT_PACKAGES}
+```
+
+## Auto-Build
+上游发布新 tag → 自动更新本仓库 → 触发阿里云 ACR 构建
+RAWEOF
+          sed -i "s/LATEST_TAG_PLACEHOLDER/$TAG/g" README.md
+          sed -i "s/DATE_PLACEHOLDER/$DATE/g" README.md
+
+      - name: Commit and push
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "NO_CHANGES"
+          else
+            git commit -m "sync: upstream ${{ steps.upstream.outputs.tag }}"
+            git push
+          fi
