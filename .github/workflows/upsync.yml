@@ -28,7 +28,7 @@ jobs:
           TAG: ${{ steps.gettag.outputs.tag }}
         run: |
           DATE=$(date -u +%Y-%m-%d)
-          cat > README.md << 'README'
+          cat > README.md << README
           # openclawxx
           [![Sync](https://github.com/xxixuan/openclawxx/actions/workflows/upsync.yml/badge.svg)](https://github.com/xxixuan/openclawxx/actions/workflows/upsync.yml)
 
