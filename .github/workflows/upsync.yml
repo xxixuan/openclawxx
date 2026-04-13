@@ -1,5 +1,4 @@
 name: Sync Upstream Tag
-
 on:
   schedule:
     - cron: "0 */6 * * *"
@@ -14,7 +13,7 @@ jobs:
         with:
           token: ${{ secrets.SYNC_TOKEN }}
 
-      - name: Get latest tag
+      - name: Get tag
         id: gettag
         run: |
           TAG=$(curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p' | head -1)
@@ -23,11 +22,14 @@ jobs:
       - name: Update README
         env:
           TAG: ${{ steps.gettag.outputs.tag }}
-        run: echo "# openclawxx"$'\n'"Latest Upstream Tag: $TAG"$'\n'"Last Synced: $(date -u +%Y-%m-%d)" > README.md
+        run: |
+          echo "# openclawxx" > README.md
+          echo "Latest Upstream Tag: $TAG" >> README.md
+          echo "Last Synced: $(date -u +%Y-%m-%d)" >> README.md
 
-      - name: Commit and push
+      - name: Commit
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions@users.noreply.github.com"
+          git config user.email "41898282+github-actions@users.nore.github.com"
           git add README.md
-          git diff --cached --quiet || (git commit -m "sync" && git push)
+          git diff --cached --quiet || git commit -m "sync" && git push
