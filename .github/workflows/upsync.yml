@@ -19,7 +19,7 @@ jobs:
       - name: Get latest tag
         id: gettag
         run: |
-          TAG=$(curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p' | head -1)
+          TAG=$(curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Current tag: $TAG"
 
