@@ -26,8 +26,21 @@ RUN --mount=type=cache,id=openclaw-apt-cache,target=/var/cache/apt,sharing=locke
         tmux \
         ffmpeg \
         jq \
+        libvulkan-dev \
+        shaderc \
         ${EXTRA_APT_PACKAGES} && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Pre-build node-llama-cpp Vulkan backend so cmake runs once at build time,
+# not at every container startup. qmd query triggers the compilation and
+# caches the binary in localBuilds/linux-x64-vulkan/.
+USER node
+RUN if command -v qmd >/dev/null 2>&1; then \
+        echo "Warming up qmd (compiling llama.cpp backend)..." && \
+        qmd query "warmup" -C 1 2>&1 || true; \
+    else \
+        echo "qmd not found in PATH, skipping warmup"; \
+    fi
 
 USER node
