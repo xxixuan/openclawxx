@@ -3,7 +3,7 @@ name: Sync upstream tag
 on:
   schedule:
     - cron: "0 */6 * * *"
-  workflow_dispatch: ~
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -27,18 +27,15 @@ jobs:
           TAG: ${{ steps.upstream.outputs.tag }}
         run: |
           DATE=$(date -u "+%Y-%m-%d")
-          python3 << 'PYEOF'
-import os
-tag = os.environ["TAG"]
-date = os.environ["DATE"]
-content = """# openclawxx
+          cat > README.md << 'HEREDOC'
+# openclawxx
 
 OpenClaw custom image — extends official base with extra APT packages.
 
 ## Base Image
 - **Upstream**: [openclaw/openclaw](https://github.com/openclaw/openclaw)
-- **Latest Tag**: {tag}
-- **Last Synced**: {date}
+- **Latest Tag**: TAG_PLACEHOLDER
+- **Last Synced**: DATE_PLACEHOLDER
 
 ## Included Packages
 ```
@@ -55,10 +52,9 @@ RUN apt-get update && apt-get install -y tmux ffmpeg jq ${EXTRA_APT_PACKAGES}
 
 ## Auto-Build
 上游发布新 tag → 自动更新本仓库 → 触发阿里云 ACR 构建
-""".format(tag=tag, date=date)
-with open("README.md", "w") as f:
-    f.write(content)
-PYEOF
+HEREDOC
+          sed -i "s/TAG_PLACEHOLDER/$TAG/g" README.md
+          sed -i "s/DATE_PLACEHOLDER/$DATE/g" README.md
 
       - name: Commit and push
         run: |
