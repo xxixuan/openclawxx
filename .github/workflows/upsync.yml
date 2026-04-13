@@ -1,5 +1,6 @@
 name: Sync Upstream Tag
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 */6 * * *"
   repository_dispatch:
@@ -8,6 +9,8 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,19 +21,25 @@ jobs:
         run: |
           TAG=$(curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p' | head -1)
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Current tag: $TAG"
 
       - name: Update README
         env:
           TAG: ${{ steps.gettag.outputs.tag }}
         run: |
           DATE=$(date -u +%Y-%m-%d)
-          echo "# openclawxx" > README.md
-          echo "Latest Upstream Tag: $TAG" >> README.md
-          echo "Last Synced: $DATE" >> README.md
+          cat > README.md << 'README'
+          # openclawxx
+          [![Sync](https://github.com/xxixuan/openclawxx/actions/workflows/upsync.yml/badge.svg)](https://github.com/xxixuan/openclawxx/actions/workflows/upsync.yml)
+
+          Latest Upstream Tag: **$TAG**
+          Last Synced: $DATE
+          README
+          echo "README updated"
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions@users.noreply.github.com"
           git add README.md
-          git diff --cached --quiet || git commit -m "sync" && git push
+          git diff --cached --quiet && echo "No changes" || { git commit -m "sync: update upstream tag"; git push; echo "Pushed!"; }
