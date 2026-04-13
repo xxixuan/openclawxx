@@ -3,7 +3,8 @@ name: Sync Upstream Tag
 on:
   schedule:
     - cron: "0 */6 * * *"
-  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-sync]
 
 jobs:
   sync:
