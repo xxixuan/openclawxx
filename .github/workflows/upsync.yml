@@ -12,13 +12,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Configure git with token
+      - name: Checkout repo
         run: |
-          git config --global url."https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.SYNC_TOKEN }}
+          git clone --depth=1 https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/xxixuan/openclawxx.git .
 
       - name: Get latest tag
         id: gettag
