@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SYNC_TOKEN }}
+          token: ${{ env.GITHUB_TOKEN }}
 
       - name: Get latest tag
         id: gettag
@@ -37,7 +37,6 @@ jobs:
 
       - name: Commit and push
         run: |
-          git remote set-url origin https://github.com/xxixuan/openclawxx.git
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions@users.noreply.github.com"
           git add README.md
