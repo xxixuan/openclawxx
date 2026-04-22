@@ -12,17 +12,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repo
-        run: |
-          gh auth setup-git
-          git clone https://github.com/xxixuan/openclawxx.git .
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SYNC_TOKEN }}
 
       - name: Get latest tag
         id: gettag
         run: |
-          gh auth setup-git
-          TAG=$(gh release view --repo openclaw/openclaw --json tagName --jq '.tagName' 2>/dev/null || \
-            curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
+          TAG=$(curl -s https://api.github.com/repos/openclaw/openclaw/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Current tag: $TAG"
 
@@ -40,7 +37,6 @@ jobs:
 
       - name: Commit and push
         run: |
-          gh auth setup-git
           git remote set-url origin https://github.com/xxixuan/openclawxx.git
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions@users.noreply.github.com"
