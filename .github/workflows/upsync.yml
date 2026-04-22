@@ -13,8 +13,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ env.GITHUB_TOKEN }}
 
       - name: Get latest tag
         id: gettag
