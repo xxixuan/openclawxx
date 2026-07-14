@@ -1,3 +1,3 @@
 # openclawxx
-Latest Upstream Tag: **v2026.6.11**
-Last Synced: 2026-06-30
+Latest Upstream Tag: **v2026.7.1**
+Last Synced: 2026-07-14
